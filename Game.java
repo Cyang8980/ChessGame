@@ -133,13 +133,14 @@ public class Game{
 				Move testMove = new Move(mover);
 				testMove.moveBot(p.getRow(), p.getCol(), row, col);
 				Move result = Mini(depth - 1, testMove, maxValue, minValue);
-				if (result.getBoard().evaluate() > (bestMove == null ? Double.NEGATIVE_INFINITY : bestMove.getBoard().evaluate())) {
+				if (bestMove == null || result.getBoard().evaluate() > bestMove.getBoard().evaluate()) {
 					bestMove = result;
 				}
 			}
 		}
 		return bestMove;
 	}
+	
 	public static Move Mini(int depth, Move mover, double maxValue, double minValue) {
 		if (depth == 0) {
 			return mover;
@@ -153,7 +154,7 @@ public class Game{
 				Move testMove = new Move(mover);
 				testMove.moveBot(p.getRow(), p.getCol(), row, col);
 				Move result = Max(depth - 1, testMove, maxValue, minValue);
-				if (result.getBoard().evaluate() < (bestMove == null ? Double.POSITIVE_INFINITY : bestMove.getBoard().evaluate())) {
+				if (bestMove == null || result.getBoard().evaluate() < bestMove.getBoard().evaluate()) {
 					bestMove = result;
 				}
 			}
