@@ -16,147 +16,209 @@ public class Game{
 		return players;
 	}
 
+	// public static Move AlphaBetaSearch(Move state, int depth, double maxValue, double minValue, String color) {
+	// 	Move mover = null;
+	// 	for (Piece p: state.getBoard().getPiecesColor(color)) {
+    //         Move newMover = new Move(state);
+	// 		if (color.equals("black")) {
+	// 			ArrayList<ArrayList<Integer>> legalMoves = state.legalPieceMoves(p, false, "black");
+	// 			ArrayList<Integer> row = legalMoves.get(0);
+	// 			ArrayList<Integer> col = legalMoves.get(1);
+	// 			mover = Mini(depth-1,row,col,newMover, maxValue);
+	// 			System.out.println("MIN'S BOARD");
+	// 			Board tempBoard = mover.getBoard();
+	// 			tempBoard.updateGameBoard();
+	// 			tempBoard.populateBoard();
+	// 		}
+    //         else { // white
+	// 			ArrayList<ArrayList<Integer>> legalMoves = mover.legalPieceMoves(p, false, "white");
+	// 			ArrayList<Integer> row = legalMoves.get(0);
+	// 			ArrayList<Integer> col = legalMoves.get(1);
+	// 			mover = Max(depth-1,row,col,newMover, minValue);
+	// 			System.out.println("MAX'S BOARD");
+	// 			Board tempBoard = mover.getBoard();
+	// 			tempBoard.updateGameBoard();
+	// 			tempBoard.populateBoard();
+	// 		}
+	// 	}
+	// 	return mover;
+	// }
 	public static Move AlphaBetaSearch(Move state, int depth, double maxValue, double minValue, String color) {
-		Move mover = null;
-		for (Piece p: state.getBoard().getPiecesColor(color)) {
-            Move newMover = new Move(state);
-			if (color.equals("black")) {
-				ArrayList<ArrayList<Integer>> legalMoves = state.legalPieceMoves(p, false, "black");
-				ArrayList<Integer> row = legalMoves.get(0);
-				ArrayList<Integer> col = legalMoves.get(1);
-				mover = Mini(depth-1,row,col,newMover, maxValue);
-				System.out.println("MIN'S BOARD");
-				Board tempBoard = mover.getBoard();
-				tempBoard.updateGameBoard();
-				tempBoard.populateBoard();
-			}
-            else { // white
-				ArrayList<ArrayList<Integer>> legalMoves = mover.legalPieceMoves(p, false, "white");
-				ArrayList<Integer> row = legalMoves.get(0);
-				ArrayList<Integer> col = legalMoves.get(1);
-				mover = Max(depth-1,row,col,newMover, minValue);
-				System.out.println("MAX'S BOARD");
-				Board tempBoard = mover.getBoard();
-				tempBoard.updateGameBoard();
-				tempBoard.populateBoard();
+		Move bestMove = null;
+		for (Piece p : state.getBoard().getPiecesColor(color)) {
+			ArrayList<ArrayList<Integer>> legalMoves = state.legalPieceMoves(p, false, color);
+			for (int m = 0; m < legalMoves.get(0).size(); m++) {
+				int row = legalMoves.get(0).get(m);
+				int col = legalMoves.get(1).get(m);
+				Move testMove = new Move(state);
+				testMove.moveBot(p.getRow(), p.getCol(), row, col);
+				Move result;
+				if (color.equals("black")) {
+					result = Mini(depth - 1, testMove, maxValue, minValue);
+				} else {
+					result = Max(depth - 1, testMove, maxValue, minValue);
+				}
+				if (bestMove == null || result.getBoard().evaluate() > bestMove.getBoard().evaluate()) {
+					bestMove = result;
+				}
 			}
 		}
-		return mover;
-	}
-    public static Move Max(double depth, ArrayList<Integer> row, ArrayList<Integer> col, Move mover, double minValue) {
-		System.out.println("in max function");
-		Move resultMover = new Move(mover);
-		double max = minValue;
-		if (depth == 0) {
-            System.out.println(mover.board.evaluate());
-			return resultMover;
-		}
-		for (int i = 0; i <= depth; i ++) {
-			System.out.println("in depth for loop");
-            for (Piece p: mover.board.getPiecesColor("white")) {
-                row = mover.legalPieceMoves(p,false,"white").get(0);
-                col = mover.legalPieceMoves(p,false,"white").get(1);
-                for (int m = 0; m < row.size(); m++) {
-					MoveHistory newState = new MoveHistory(mover.getBoard(),mover);
-					states.push(newState);
-					Board tempBoard = new Board(mover.getBoard());
-                    mover.moveBot(p.getRow(),p.getCol(),row.get(m),col.get(m));
-                    MoveHistory state = states.pop();
-					if (mover.getBoard().evaluate() > tempBoard.evaluate()) {
-						max = mover.getBoard().evaluate();
-						System.out.println("Undoing");
-						if (mover.board != state.getBoard()) {
-							mover.board = state.getBoard();
-							}
-						if (mover != state.getMover()) {
-							System.out.println("Not the same move object");
-							mover = state.getMover();
-							mover.board = mover.getBoard();
-						}
-					}
-                    System.out.println("calling Mini function");
-					resultMover = Mini(depth-1,row,col,mover,max);
-                    if (mover.board != state.getBoard()) {
-                        mover.board = state.getBoard();
-                        }
-                    if (mover != state.getMover()) {
-                        System.out.println("Not the same move object");
-                        mover = state.getMover();
-                        mover.board = mover.getBoard();
-                    }
-                }
-            }
-			double score = Math.max(minValue, resultMover.getBoard().evaluate());
-			if (score < minValue) {
-				minValue = score;
-			    resultMover = mover;
-			}
-		}
-		resultMover.getBoard().updateGameBoard();
-		resultMover.getBoard().populateBoard();
-		resultMover.getBoard().currentGameState();
-		return resultMover;
+		return bestMove;
 	}
 
-	public static Move Mini(double depth, ArrayList<Integer> row, ArrayList<Integer> col, Move mover, double maxValue) {
-		// System.out.println("in min function");
-		Move resultMover = new Move(mover);
-		double min = maxValue;
+    // public static Move Max(double depth, ArrayList<Integer> row, ArrayList<Integer> col, Move mover, double minValue) {
+	// 	System.out.println("in max function");
+	// 	Move resultMover = new Move(mover);
+	// 	double max = minValue;
+	// 	if (depth == 0) {
+    //         System.out.println(mover.board.evaluate());
+	// 		return resultMover;
+	// 	}
+	// 	for (int i = 0; i <= depth; i ++) {
+	// 		System.out.println("in depth for loop");
+    //         for (Piece p: mover.board.getPiecesColor("white")) {
+    //             row = mover.legalPieceMoves(p,false,"white").get(0);
+    //             col = mover.legalPieceMoves(p,false,"white").get(1);
+    //             for (int m = 0; m < row.size(); m++) {
+	// 				MoveHistory newState = new MoveHistory(mover.getBoard(),mover);
+	// 				states.push(newState);
+	// 				Board tempBoard = new Board(mover.getBoard());
+    //                 mover.moveBot(p.getRow(),p.getCol(),row.get(m),col.get(m));
+    //                 MoveHistory state = states.pop();
+	// 				if (mover.getBoard().evaluate() > tempBoard.evaluate()) {
+	// 					max = mover.getBoard().evaluate();
+	// 					System.out.println("Undoing");
+	// 					if (mover.board != state.getBoard()) {
+	// 						mover.board = state.getBoard();
+	// 						}
+	// 					if (mover != state.getMover()) {
+	// 						System.out.println("Not the same move object");
+	// 						mover = state.getMover();
+	// 						mover.board = mover.getBoard();
+	// 					}
+	// 				}
+    //                 System.out.println("calling Mini function");
+	// 				resultMover = Mini(depth-1,row,col,mover,max);
+    //                 if (mover.board != state.getBoard()) {
+    //                     mover.board = state.getBoard();
+    //                     }
+    //                 if (mover != state.getMover()) {
+    //                     System.out.println("Not the same move object");
+    //                     mover = state.getMover();
+    //                     mover.board = mover.getBoard();
+    //                 }
+    //             }
+    //         }
+	// 		double score = Math.max(minValue, resultMover.getBoard().evaluate());
+	// 		if (score < minValue) {
+	// 			minValue = score;
+	// 		    resultMover = mover;
+	// 		}
+	// 	}
+	// 	resultMover.getBoard().updateGameBoard();
+	// 	resultMover.getBoard().populateBoard();
+	// 	resultMover.getBoard().currentGameState();
+	// 	return resultMover;
+	// }
+	public static Move Max(int depth, Move mover, double maxValue, double minValue) {
 		if (depth == 0) {
-            System.out.println(mover.board.evaluate());
 			return mover;
 		}
-		for (int i = 0; i <= depth; i ++) {
-			System.out.println("in depth for loop");
-            for (Piece p: mover.board.getPiecesColor("black")) {
-                row = mover.legalPieceMoves(p,false,"black").get(0);
-                col = mover.legalPieceMoves(p,false,"black").get(1);
-				System.out.println(row.size());
-                for (int m = 0; m < row.size(); m++) {
-                    MoveHistory newState = new MoveHistory(mover.board,mover);
-					states.push(newState);
-                    mover.moveBot(p.getRow(),p.getCol(),row.get(m),col.get(m));
-					System.out.println("calling Max function");
-					Board tempBoard = new Board(mover.getBoard());
-                    mover.moveBot(p.getRow(),p.getCol(),row.get(m),col.get(m));
-                    MoveHistory state = states.pop();
-
-					if (mover.getBoard().evaluate() > tempBoard.evaluate()) {
-						min = mover.getBoard().evaluate();
-						System.out.println("Undoing");
-						if (mover.board != state.getBoard()) {
-							mover.board = state.getBoard();
-							}
-						if (mover != state.getMover()) {
-							System.out.println("Not the same move object");
-							mover = state.getMover();
-							mover.board = mover.getBoard();
-						}
-					}
-                    System.out.println("calling Max function");
-					resultMover = Max(depth-1,row,col,mover,min);
-                    if (mover.board != state.getBoard()) {
-                        mover.board = state.getBoard();
-
-                        }
-                    if (mover != state.getMover()) {
-                        System.out.println("Not the same move object");
-                        mover = state.getMover();
-                        mover.board = mover.getBoard();
-                    }
-                }
-            }
- 			double score = Math.min(maxValue, resultMover.getBoard().evaluate());
-			if (score < maxValue) {
-				maxValue = score;
-				resultMover = mover;
+		Move bestMove = null;
+		for (Piece p : mover.getBoard().getPiecesColor("white")) {
+			ArrayList<ArrayList<Integer>> legalMoves = mover.legalPieceMoves(p, false, "white");
+			for (int m = 0; m < legalMoves.get(0).size(); m++) {
+				int row = legalMoves.get(0).get(m);
+				int col = legalMoves.get(1).get(m);
+				Move testMove = new Move(mover);
+				testMove.moveBot(p.getRow(), p.getCol(), row, col);
+				Move result = Mini(depth - 1, testMove, maxValue, minValue);
+				if (result.getBoard().evaluate() > (bestMove == null ? Double.NEGATIVE_INFINITY : bestMove.getBoard().evaluate())) {
+					bestMove = result;
+				}
 			}
 		}
-		resultMover.getBoard().updateGameBoard();
-		resultMover.getBoard().populateBoard();
-		resultMover.getBoard().currentGameState();
-		return resultMover;
+		return bestMove;
 	}
+	public static Move Mini(int depth, Move mover, double maxValue, double minValue) {
+		if (depth == 0) {
+			return mover;
+		}
+		Move bestMove = null;
+		for (Piece p : mover.getBoard().getPiecesColor("black")) {
+			ArrayList<ArrayList<Integer>> legalMoves = mover.legalPieceMoves(p, false, "black");
+			for (int m = 0; m < legalMoves.get(0).size(); m++) {
+				int row = legalMoves.get(0).get(m);
+				int col = legalMoves.get(1).get(m);
+				Move testMove = new Move(mover);
+				testMove.moveBot(p.getRow(), p.getCol(), row, col);
+				Move result = Max(depth - 1, testMove, maxValue, minValue);
+				if (result.getBoard().evaluate() < (bestMove == null ? Double.POSITIVE_INFINITY : bestMove.getBoard().evaluate())) {
+					bestMove = result;
+				}
+			}
+		}
+		return bestMove;
+	}
+	// public static Move Mini(double depth, ArrayList<Integer> row, ArrayList<Integer> col, Move mover, double maxValue) {
+	// 	// System.out.println("in min function");
+	// 	Move resultMover = new Move(mover);
+	// 	double min = maxValue;
+	// 	if (depth == 0) {
+    //         System.out.println(mover.board.evaluate());
+	// 		return mover;
+	// 	}
+	// 	for (int i = 0; i <= depth; i ++) {
+	// 		System.out.println("in depth for loop");
+    //         for (Piece p: mover.board.getPiecesColor("black")) {
+    //             row = mover.legalPieceMoves(p,false,"black").get(0);
+    //             col = mover.legalPieceMoves(p,false,"black").get(1);
+	// 			System.out.println(row.size());
+    //             for (int m = 0; m < row.size(); m++) {
+    //                 MoveHistory newState = new MoveHistory(mover.board,mover);
+	// 				states.push(newState);
+    //                 mover.moveBot(p.getRow(),p.getCol(),row.get(m),col.get(m));
+	// 				System.out.println("calling Max function");
+	// 				Board tempBoard = new Board(mover.getBoard());
+    //                 mover.moveBot(p.getRow(),p.getCol(),row.get(m),col.get(m));
+    //                 MoveHistory state = states.pop();
+
+	// 				if (mover.getBoard().evaluate() > tempBoard.evaluate()) {
+	// 					min = mover.getBoard().evaluate();
+	// 					System.out.println("Undoing");
+	// 					if (mover.board != state.getBoard()) {
+	// 						mover.board = state.getBoard();
+	// 						}
+	// 					if (mover != state.getMover()) {
+	// 						System.out.println("Not the same move object");
+	// 						mover = state.getMover();
+	// 						mover.board = mover.getBoard();
+	// 					}
+	// 				}
+    //                 System.out.println("calling Max function");
+	// 				resultMover = Max(depth-1,row,col,mover,min);
+    //                 if (mover.board != state.getBoard()) {
+    //                     mover.board = state.getBoard();
+
+    //                     }
+    //                 if (mover != state.getMover()) {
+    //                     System.out.println("Not the same move object");
+    //                     mover = state.getMover();
+    //                     mover.board = mover.getBoard();
+    //                 }
+    //             }
+    //         }
+ 	// 		double score = Math.min(maxValue, resultMover.getBoard().evaluate());
+	// 		if (score < maxValue) {
+	// 			maxValue = score;
+	// 			resultMover = mover;
+	// 		}
+	// 	}
+	// 	resultMover.getBoard().updateGameBoard();
+	// 	resultMover.getBoard().populateBoard();
+	// 	resultMover.getBoard().currentGameState();
+	// 	return resultMover;
+	// }
 	public static void main(String[] args) {
 
 		for(int i = 0; i < 5; i++){
